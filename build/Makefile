@@ -22,8 +22,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 clean:
 	rm -f $(BUILD_DIR)/*.o $(EXECUTABLE)
 
-test: $(BUILD_DIR)/test_sound_generator
+test: $(BUILD_DIR)/test_sound_generator $(BUILD_DIR)/test_fourier_transform
 	./$(BUILD_DIR)/test_sound_generator
+	./$(BUILD_DIR)/test_fourier_transform
 
 $(BUILD_DIR)/test_sound_generator: ../tests/test_sound_generator.c $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+$(BUILD_DIR)/test_fourier_transform: ../tests/test_fourier_transform.c $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS))
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
