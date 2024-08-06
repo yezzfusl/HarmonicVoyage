@@ -2,7 +2,7 @@
 An artistic journey through sound and math, visualized in code.
 
 # Jingle Bells Synth
-
+https://github.com/user-attachments/assets/d83b6b92-fc12-4b57-8979-0a3a5236d5f2
 ## Advanced Audio Synthesis and Visualization Project
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
