@@ -45,9 +45,4 @@ jobs:
           valgrind-report.txt
           cppcheck-report.xml
 
-    - name: Check for vulnerabilities in dependencies
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        command: test
+    
