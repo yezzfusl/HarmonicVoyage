@@ -1,0 +1,60 @@
+name: Security Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly
+
+jobs:
+  security_check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc make libsdl2-dev libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev valgrind cppcheck
+
+    - name: Install Raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git
+        cd raylib/src
+        make PLATFORM=PLATFORM_DESKTOP
+        sudo make install
+
+    - name: Build project
+      run: |
+        cd build
+        make clean
+        make
+
+    - name: Run Valgrind (Memory Leak Check)
+      run: |
+        valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-report.txt ./build/jingle_bells_synth &
+        sleep 10
+        pkill jingle_bells_synth
+        cat valgrind-report.txt
+
+    - name: Run Cppcheck (Static Analysis)
+      run: |
+        cppcheck --enable=all --inconclusive --xml --xml-version=2 src/ 2> cppcheck-report.xml
+
+    - name: Archive security reports
+      uses: actions/upload-artifact@v2
+      with:
+        name: security-reports
+        path: |
+          valgrind-report.txt
+          cppcheck-report.xml
+
+    - name: Check for vulnerabilities in dependencies
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: test
