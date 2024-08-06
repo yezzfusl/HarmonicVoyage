@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -I../include
-LDFLAGS = -lm -lSDL2
+LDFLAGS = -lm -lSDL2 -lraylib
 
 SRC_DIR = ../src
 BUILD_DIR = .
