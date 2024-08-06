@@ -6,6 +6,7 @@
 #include "../include/sound_generator.h"
 #include "../include/utils.h"
 #include "../include/fourier_transform.h"
+#include "../include/visualizer.h"
 
 #define BUFFER_SIZE 44100 * 10  // 10 seconds of audio
 
@@ -19,6 +20,8 @@ void audio_callback(void* userdata, Uint8* stream, int len) {
     }
     
     memcpy(stream, &buffer[current_sample], samples_to_copy * sizeof(int16_t));
+    update_visualizer(&buffer[current_sample], samples_to_copy);
+    
     current_sample += samples_to_copy;
     
     if (current_sample >= BUFFER_SIZE) {
@@ -58,11 +61,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    init_visualizer();
+
     SDL_PauseAudioDevice(dev, 0);
 
-    printf("Playing Jingle Bells melody. Press Enter to stop...\n");
-    getchar();
+    printf("Playing Jingle Bells melody with visualization. Close the window to stop...\n");
 
+    while (!WindowShouldClose()) {
+        draw_visualizer();
+    }
+
+    close_visualizer();
     SDL_CloseAudioDevice(dev);
     SDL_Quit();
     free(audio_buffer);
