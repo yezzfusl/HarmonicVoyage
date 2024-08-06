@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include <complex.h>
 #include "../include/sound_generator.h"
 #include "../include/utils.h"
+#include "../include/fourier_transform.h"
 
 #define BUFFER_SIZE 4096
+#define FFT_SIZE 2048
 
 void audio_callback(void* userdata, Uint8* stream, int len) {
     int16_t* buffer = (int16_t*)stream;
@@ -15,6 +18,24 @@ void audio_callback(void* userdata, Uint8* stream, int len) {
     Note note = {440.0, 0.0, 1.0};  // A4 note
     
     generate_sine_wave(buffer, num_samples, note);
+    
+    // Apply FFT for spectral analysis
+    cplx fft_buffer[FFT_SIZE];
+    for (int i = 0; i < FFT_SIZE; i++) {
+        fft_buffer[i] = i < num_samples ? buffer[i] : 0;
+    }
+    
+    fft(fft_buffer, FFT_SIZE);
+    
+    // Here you can manipulate the frequency domain data if needed
+    
+    // Apply inverse FFT to get back to time domain
+    ifft(fft_buffer, FFT_SIZE);
+    
+    // Copy the processed data back to the output buffer
+    for (int i = 0; i < num_samples; i++) {
+        buffer[i] = (int16_t)creal(fft_buffer[i]);
+    }
     
     time += (double)num_samples / SAMPLE_RATE;
 }
