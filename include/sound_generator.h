@@ -20,10 +20,14 @@ typedef struct {
     double release;
 } ADSR;
 
-void generate_sine_wave(int16_t* buffer, int num_samples, Note note);
-void generate_square_wave(int16_t* buffer, int num_samples, Note note);
-void generate_triangle_wave(int16_t* buffer, int num_samples, Note note);
-void generate_sawtooth_wave(int16_t* buffer, int num_samples, Note note);
+typedef enum {
+    WAVEFORM_SINE,
+    WAVEFORM_SQUARE,
+    WAVEFORM_TRIANGLE,
+    WAVEFORM_SAWTOOTH
+} Waveform;
+
+void generate_waveform(int16_t* buffer, int num_samples, Note note, Waveform waveform);
 void apply_adsr_envelope(int16_t* buffer, int num_samples, ADSR envelope);
 void generate_jingle_bells_melody(int16_t* buffer, int buffer_size);
 

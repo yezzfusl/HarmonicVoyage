@@ -5,38 +5,48 @@
 
 #define PI 3.14159265358979323846
 
-void generate_sine_wave(int16_t* buffer, int num_samples, Note note) {
-    for (int i = 0; i < num_samples; i++) {
-        double t = (double)i / SAMPLE_RATE;
-        buffer[i] = (int16_t)(note.amplitude * AMPLITUDE * sin(2.0 * PI * note.frequency * t + note.phase));
-    }
+static double sine_wave(double t, double frequency, double phase) {
+    return sin(2.0 * PI * frequency * t + phase);
 }
 
-void generate_square_wave(int16_t* buffer, int num_samples, Note note) {
-    for (int i = 0; i < num_samples; i++) {
-        double t = (double)i / SAMPLE_RATE;
-        double value = sin(2.0 * PI * note.frequency * t + note.phase);
-        buffer[i] = (int16_t)(note.amplitude * AMPLITUDE * (value >= 0 ? 1 : -1));
-    }
+static double square_wave(double t, double frequency, double phase) {
+    return sine_wave(t, frequency, phase) >= 0 ? 1.0 : -1.0;
 }
 
-void generate_triangle_wave(int16_t* buffer, int num_samples, Note note) {
-    for (int i = 0; i < num_samples; i++) {
-        double t = (double)i / SAMPLE_RATE;
-        double period = 1.0 / note.frequency;
-        double normalized_t = fmod(t + note.phase / (2.0 * PI * note.frequency), period) / period;
-        double value = 4.0 * fabs(normalized_t - 0.5) - 1.0;
-        buffer[i] = (int16_t)(note.amplitude * AMPLITUDE * value);
-    }
+static double triangle_wave(double t, double frequency, double phase) {
+    double period = 1.0 / frequency;
+    double normalized_t = fmod(t + phase / (2.0 * PI * frequency), period) / period;
+    return 2.0 * fabs(2.0 * normalized_t - 1.0) - 1.0;
 }
 
-void generate_sawtooth_wave(int16_t* buffer, int num_samples, Note note) {
+static double sawtooth_wave(double t, double frequency, double phase) {
+    double period = 1.0 / frequency;
+    double normalized_t = fmod(t + phase / (2.0 * PI * frequency), period) / period;
+    return 2.0 * normalized_t - 1.0;
+}
+
+void generate_waveform(int16_t* buffer, int num_samples, Note note, Waveform waveform) {
+    double (*wave_function)(double, double, double);
+
+    switch (waveform) {
+        case WAVEFORM_SQUARE:
+            wave_function = square_wave;
+            break;
+        case WAVEFORM_TRIANGLE:
+            wave_function = triangle_wave;
+            break;
+        case WAVEFORM_SAWTOOTH:
+            wave_function = sawtooth_wave;
+            break;
+        case WAVEFORM_SINE:
+        default:
+            wave_function = sine_wave;
+            break;
+    }
+
     for (int i = 0; i < num_samples; i++) {
         double t = (double)i / SAMPLE_RATE;
-        double period = 1.0 / note.frequency;
-        double normalized_t = fmod(t + note.phase / (2.0 * PI * note.frequency), period) / period;
-        double value = 2.0 * normalized_t - 1.0;
-        buffer[i] = (int16_t)(note.amplitude * AMPLITUDE * value);
+        buffer[i] = (int16_t)(note.amplitude * AMPLITUDE * wave_function(t, note.frequency, note.phase));
     }
 }
 
@@ -93,7 +103,7 @@ void generate_jingle_bells_melody(int16_t* buffer, int buffer_size) {
 
         int note_samples = durations[i] * SAMPLE_RATE;
         int16_t note_buffer[note_samples];
-        generate_sine_wave(note_buffer, note_samples, note);
+        generate_waveform(note_buffer, note_samples, note, WAVEFORM_SINE);
 
         ADSR envelope = {0.01, 0.1, 0.7, 0.1};
         apply_adsr_envelope(note_buffer, note_samples, envelope);
